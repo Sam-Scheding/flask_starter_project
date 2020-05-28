@@ -1,33 +1,32 @@
 import os
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
 from .services.database_service import db
+from .services.serialiser_service import ma
 from be.api.user.views import blueprint as user_blueprint
-
-BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-SQLALCHEMY_DATABASE_URI = 'sqlite:///{}'.format(os.path.join(BASE_DIR, 'db.sqlite'))
+from be.api.auth.views import blueprint as auth_blueprint
 
 def create_app():
+
     # Create application instance
     app = Flask(__name__)
 
-    # Configure
-    app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    app.config['DEBUG'] = True
-    app.config['FLASK_ENV'] = 'development'
+    app.config.from_pyfile('config.py')
 
     db.init_app(app)
-    
+
+    ma.init_app(app)
+
     #Register Blueprints
     app.register_blueprint(user_blueprint, url_prefix='/api/v1/')
+    app.register_blueprint(auth_blueprint, url_prefix='/api/v1/')
+
 
     # Print routes
     print('Registered routes: ')
     for rule in app.url_map.iter_rules():
         print('\t- {} {}'.format(rule.rule, rule.methods))
 
-    if not os.path.isfile(os.path.join(BASE_DIR, 'db.sqlite')):
+    if not os.path.isfile(os.path.join(app.config['BASE_DIR'], 'db.sqlite')):
         setup_database(app)
 
     return app

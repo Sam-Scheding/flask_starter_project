@@ -2,6 +2,7 @@ import bcrypt
 from be.api.user.models import User, Salt
 from .database_service import db
 from .validation_service import ValidationService
+from .authorisation_service import AuthorisationService
 
 class UserService:
 
@@ -14,61 +15,49 @@ class UserService:
             return None, 'Invalid password'
 
         # TEST: User can delete and then recreate an account with the same email
-        user = User.query.filter_by(email=email, deleted=False).first()
+        user = User.query.filter_by(email=email, is_deleted=False).first()
         if user:
             return None, 'User exists'
 
-        salt = bcrypt.gensalt()
-        password_hash = bcrypt.hashpw(password.encode('utf-8'), salt)
+        salt = AuthorisationService.generate_salt()
+        hashed_password = AuthorisationService.hash_password(password, salt)
 
-        salt_model = Salt(email, salt)
-        user_model = User(email, password_hash)
+        new_salt = Salt(email, salt)
+        new_user = User(email, hashed_password)
 
-        db.session.add(salt_model)
-        db.session.add(user_model)
+        db.session.add(new_salt)
+        db.session.add(new_user)
         db.session.commit()
 
-        return {
-            'email': user_model.email,
-            'activated': user_model.activated,
-        }, 'Success'
+        return new_user, 'Success'
 
 
-    def get_user(email=None):
-
-        if not ValidationService.is_valid_email(email):
-            return None, 'Invalid email'
+    def get_user(*args, **kwargs):
 
         # TEST: User can't get a deleted user
-        user = User.query.filter_by(email=email, deleted=False).first()
+        user = User.query.filter_by(**kwargs, is_deleted=False).first()
 
         if not user: # TEST: User can't get a non-existent user
             return None, 'No such user' 
 
-        return {
-            'email': user.email,
-            'activated': user.activated,
-        }, 'Success'
+        return user, 'Success'
 
     def update_user(email=None, fields={}):
-
         
         if not ValidationService.is_valid_email(email):
             return None, 'Invalid email'
 
         # TEST: User can't update a deleted user
-        user = User.query.filter_by(email=email, deleted=False).first()
+        user = User.query.filter_by(email=email, is_deleted=False).first()
 
         if not user:
             return None, 'No such user'
 
+        # TEST: Can't promote user to admin
         user.email = fields.get('email', user.email)
-        user.activated = fields.get('activated', user.activated)
+        user.is_activated = fields.get('is_activated', user.is_activated)
 
-        return {
-            'email': user.email,
-            'activated': user.activated,
-        }, 'Success'
+        return user, 'Success'
 
     def delete_user(email=None):
 
@@ -76,12 +65,12 @@ class UserService:
             return False, 'Invalid email'
 
         # TEST: User can't update a deleted user
-        user = User.query.filter_by(email=email, deleted=False).first()
+        user = User.query.filter_by(email=email, is_deleted=False).first()
 
         if not user:
             return False, 'No such user'
 
-        user.deleted = True
+        user.is_deleted = True
         db.session.commit()
 
         return True, 'Success'
