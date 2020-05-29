@@ -2,5 +2,16 @@
     "python.linting.pylintEnabled": true,
     "python.linting.flake8Enabled": false,
     "python.linting.enabled": true,
-    "python.pythonPath": "/Users/samscheding/projects/vue_tutorials/be/env/bin/python3"
+    "python.linting.lintOnSave": true,
+    "python.pythonPath": "/Users/samscheding/projects/vue_tutorials/be/env/bin/python3",
+    "python.testing.unittestEnabled": true,
+    "python.testing.unittestArgs": [
+        "-v",
+        "-s",
+        ".",
+        "-p",
+        "test_*.py"
+    ],
+    "python.testing.pytestEnabled": false,
+    "python.testing.nosetestsEnabled": false
 }

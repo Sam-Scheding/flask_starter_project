@@ -17,14 +17,13 @@ def login():
     email = body.get('email', None)
     password_attempt = body.get('password', None)
 
-    if not ValidationService.is_valid_email(email):
-        return jsonify({'message': 'Invalid email'}), 400
+    if not ValidationService.is_valid_email(email) or not password_attempt:
+        return jsonify({'message': 'Bad Request'}), 400
 
     user, message = UserService.get_user(email=email)
     is_authorized = AuthorisationService.is_authorized(user, password_attempt)
 
     if not is_authorized:
-        contentHeaders = {'WWW-Autheticate': 'Basic realm="Login Required"'}
         return jsonify({'message': 'Unauthorised'}), 401
 
     token = jwt.encode({ 

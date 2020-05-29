@@ -1,7 +1,7 @@
 import os
 from flask import Flask
-from .services.database_service import db
-from .services.serialiser_service import ma
+from be.services.database_service import db
+from be.services.serialiser_service import ma
 from be.api.user.views import blueprint as user_blueprint
 from be.api.auth.views import blueprint as auth_blueprint
 

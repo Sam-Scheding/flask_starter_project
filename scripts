@@ -1,0 +1,31 @@
+#! env/bin/python
+import subprocess
+import argparse
+import os
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument("action", help="Run a command. Options are run, test")
+parser.add_argument("--prod", help="Switch to production mode", action='store_true')
+args = parser.parse_args()
+
+if args.action == 'run':
+    env = os.environ.copy()
+    if args.prod:
+        env["FLASK_ENV"] = 'production'
+    else:
+        env["FLASK_ENV"] = 'development'
+
+    command = ["flask", "run"]
+    print(' '.join(command))
+    subprocess.run(command, env=env)
+
+if args.action == 'test':
+    command = ["python", "-m", "unittest"]
+    print(' '.join(command))
+    subprocess.run(command)
+
+
+# TODO: Implement a createapp command
+
+# TODO: Reset DB command
